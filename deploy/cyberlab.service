@@ -1,0 +1,38 @@
+[Unit]
+Description=CyberLab control plane
+Documentation=file:/opt/cyberlab/README.md
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+User=cyberlab
+Group=cyberlab
+WorkingDirectory=/opt/cyberlab
+EnvironmentFile=/etc/cyberlab/cyberlab.env
+ExecStart=/opt/cyberlab/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8443 --proxy-headers --forwarded-allow-ips 127.0.0.1
+Restart=on-failure
+RestartSec=3
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=false
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/lib/cyberlab
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

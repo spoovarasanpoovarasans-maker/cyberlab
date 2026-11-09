@@ -1,0 +1,26 @@
+{
+	# Replace with your private DNS name (VPN or /etc/hosts entry).
+	# For a private lab, Caddy's internal CA is fine. Install its root CA on
+	# the clients that need to trust it:
+	#   docker compose exec caddy cat /data/caddy/pki/authorities/local/root.crt
+	email admin@example.com
+}
+
+lab.example.com {
+	tls internal
+
+	reverse_proxy cyberlab:8443
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

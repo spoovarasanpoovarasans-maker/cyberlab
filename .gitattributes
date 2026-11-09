@@ -1,0 +1,4 @@
+# Normalize line endings to LF in the repository and working tree.
+# Keeps shell scripts, Dockerfiles, and Python sources consistent across
+# Windows and Linux hosts.
+* text=auto eol=lf

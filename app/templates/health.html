@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Health &middot; {{ app_name }}{% endblock %}
+{% block body %}
+<h1>Health</h1>
+
+<div class="grid">
+  <div class="card">
+    <h2>Docker</h2>
+    {% if health.docker %}
+      <p><span class="badge ok">connected</span></p>
+    {% else %}
+      <p><span class="badge bad">unavailable</span></p>
+      <p class="small">{{ health.error }}</p>
+    {% endif %}
+    <p class="small">Lab network: {{ "present" if health.network else "missing" }}</p>
+    <p class="small">Edge network: {{ "present" if health.edge_network else "missing" }}</p>
+    <p class="small">Managed containers: {{ health.managed_containers }}</p>
+  </div>
+
+  <div class="card">
+    <h2>Data</h2>
+    <p class="small">Challenges in catalog: {{ catalog_size }}</p>
+    <p class="small">Instances (all time): {{ stats.instances }}</p>
+    <p class="small">Running: {{ stats.running }}</p>
+    <p class="small">Solves: {{ stats.solves }}</p>
+    <p class="small">Audit events: {{ stats.audit }}</p>
+    <p class="small">Disk free: {{ disk_free_gb }} GB of {{ disk_total_gb }} GB</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Maintenance</h2>
+  <p class="small">
+    Reconcile removes managed challenge containers that are not tracked as running.
+    Use it after a crash or an unclean shutdown.
+  </p>
+  <form method="post" action="/admin/reconcile">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <button type="submit" class="secondary">Reconcile containers</button>
+  </form>
+</div>
+{% endblock %}

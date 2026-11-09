@@ -1,0 +1,75 @@
+services:
+  # Restricted Docker API. The control plane never sees the raw socket.
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy:0.2
+    environment:
+      CONTAINERS: "1"
+      IMAGES: "1"
+      NETWORKS: "1"
+      POST: "1"
+      DELETE: "1"
+      PING: "1"
+      VERSION: "1"
+      INFO: "1"
+      EXEC: "0"
+      BUILD: "0"
+      VOLUMES: "0"
+      SWARM: "0"
+      SYSTEM: "0"
+      AUTH: "0"
+      LOG_LEVEL: "warning"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - control
+    read_only: true
+    tmpfs:
+      - /run
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  cyberlab:
+    build: .
+    env_file:
+      - .env
+    environment:
+      DOCKER_HOST: tcp://socket-proxy:2375
+      CYBERLAB_DATA_DIR: /data
+    volumes:
+      - cyberlab_data:/data
+    ports:
+      - "${CYBERLAB_BIND_IP:-127.0.0.1}:${CYBERLAB_CONTROL_PORT:-8443}:8443"
+    networks:
+      - control
+    depends_on:
+      - socket-proxy
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    init: true
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8443/healthz', timeout=3)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  cyberlab_data:
+
+networks:
+  control:
+    name: cyberlab_control
+    driver: bridge

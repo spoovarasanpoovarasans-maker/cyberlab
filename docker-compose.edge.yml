@@ -1,0 +1,29 @@
+# Optional TLS edge. Start with:
+#   docker compose -f docker-compose.yml -f docker-compose.edge.yml up -d
+#
+# Set CYBERLAB_SESSION_HTTPS_ONLY=true in .env when using this file.
+# Replace lab.example.com in deploy/Caddyfile with your VPN DNS name.
+services:
+  caddy:
+    image: caddy:2.8-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - control
+    depends_on:
+      - cyberlab
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  control:
+    external: true
+    name: cyberlab_control
