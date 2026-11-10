@@ -18,7 +18,7 @@ from docker.types import Ulimit
 
 from .catalog import Challenge
 from .config import Settings
-from .db import Database
+from .db import Database, utcnow
 
 logger = logging.getLogger(__name__)
 
@@ -290,7 +290,14 @@ class DockerOrchestrator:
             self._remove(container)
 
     def reconcile(self, db: Database) -> int:
-        """Remove managed containers whose instance is not active in the database."""
+        """Reconcile container state with the database.
+
+        Instances the database still marks "running" whose challenge container
+        is gone or stopped (for example after a host or Docker restart) are
+        marked stopped so the dashboard and port accounting match reality.
+        Every managed container that no longer belongs to an active instance is
+        then removed.
+        """
         try:
             containers = self.client.containers.list(
                 all=True, filters={"label": "cyberlab.managed=true"}
@@ -298,6 +305,23 @@ class DockerOrchestrator:
         except (DockerException, OrchestratorError) as exc:
             logger.warning("reconcile skipped: %s", exc)
             return 0
+
+        by_instance: dict[str, list] = {}
+        for container in containers:
+            instance_id = (container.labels or {}).get("cyberlab.instance")
+            if instance_id:
+                by_instance.setdefault(instance_id, []).append(container)
+
+        for instance_id in db.active_instance_ids():
+            group = by_instance.get(instance_id, [])
+            alive = any(
+                (container.labels or {}).get("cyberlab.role") == "challenge"
+                and container.status == "running"
+                for container in group
+            )
+            if not alive:
+                db.set_instance_status(instance_id, "stopped", utcnow())
+                logger.info("marked stale instance %s stopped", instance_id)
 
         known = db.active_instance_ids()
         removed = 0
